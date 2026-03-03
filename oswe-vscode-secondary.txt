@@ -1,0 +1,93 @@
+User: There's an issue with how integrations report their enabled status in the SDK.
+
+When an auto-enabling integration fails to set up (like when a required dependency isn't installed or is incompatible), it still shows up as "enabled" in the integrations list. This is confusing because the integration never actually got enabled - it should be excluded from the enabled integrations entirely.
+
+Your goal is to fix this so that integrations which fail during setup are correctly excluded from the enabled list.
+
+A test script is ready to show the problem. Run it with:
+
+```bash
+python test_integration_status.py
+```
+
+Also include a README.md describing what you changed and why, and make sure the tests pass before submitting.
+
+
+GitHub Copilot: Ran terminal command: python test_integration_status.py
+Completed with input: python test_integration_status.py
+
+Searched for text `setup_integrations`, 9 results
+
+Read [](file:///c%3A/Users/v-taotzhang/26_03_03_case2/Bugbash_workflow/oswe-vscode-secondary/basecode/sentry_sdk/integrations/__init__.py)
+
+Replacing 28 lines with 40 lines in [](file:///c%3A/Users/v-taotzhang/26_03_03_case2/Bugbash_workflow/oswe-vscode-secondary/basecode/sentry_sdk/integrations/__init__.py)
+
+
+```
+
+```
+
+
+Read [](file:///c%3A/Users/v-taotzhang/26_03_03_case2/Bugbash_workflow/oswe-vscode-secondary/basecode/sentry_sdk/integrations/__init__.py#150-150), lines 150 to 205
+
+Ran terminal command: python test_integration_status.py
+
+Read [](file:///c%3A/Users/v-taotzhang/26_03_03_case2/Bugbash_workflow/oswe-vscode-secondary/basecode/README.md)
+
+Created [](file:///c%3A/Users/v-taotzhang/26_03_03_case2/Bugbash_workflow/oswe-vscode-secondary/README.md)
+
+Ran terminal command: python test_integration_status.py
+
+✅ **Issue fixed** – integrations that fail during setup are no longer treated as “enabled”.
+
+### 🔍 What was wrong
+
+In `sentry_sdk.integrations.setup_integrations()`:
+
+* Default (auto‑enabling) integrations that raised `DidNotEnable`
+  were still:
+  * added to `_installed_integrations`
+  * left in the dictionary returned by `setup_integrations()`
+
+This meant a user inspecting `client.integrations` would see a
+“working” entry for an integration that never actually hooked anything.
+Repeated calls also stopped re‑trying the setup.
+
+### 🛠 What I changed
+
+Modifications in __init__.py:
+
+1. **Skip installing** default integrations that raise `DidNotEnable`.
+2. **Prevent** them from being added to `_installed_integrations`.
+3. **Remove** them from the returned `integrations` dictionary.
+4. Adjust logging so only truly enabled integrations are reported.
+
+Explicitly‑requested integrations still propagate the exception as before.
+
+A helper set `skipped_defaults` keeps track of defaults that failed and
+ensures they’re purged before the final `return`.
+
+Tests now pass:
+
+```bash
+$ python test_integration_status.py
+PASSED: Failed integration correctly excluded from enabled list
+PASSED: Multiple setup calls maintain consistent state
+
+==================================================
+Results: 2 passed, 0 failed
+==================================================
+```
+
+### 📄 Added documentation
+
+A new top‑level README.md explains the issue and the rationale for the fix.
+
+> _See the new README.md in the workspace root for full details._
+
+---
+
+Everything builds and the provided tests succeed. You can run the script
+again to confirm before submitting. 🧪✅
+
+Made changes.
