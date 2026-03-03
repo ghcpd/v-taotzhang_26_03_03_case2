@@ -119,6 +119,8 @@ def setup_integrations(
                 integrations[instance.identifier] = instance
                 used_as_default_integration.add(instance.identifier)
 
+    failed_integrations = set()
+
     for identifier, integration in iteritems(integrations):
         with _installer_lock:
             if identifier not in _installed_integrations:
@@ -144,8 +146,13 @@ def setup_integrations(
                     logger.debug(
                         "Did not enable default integration %s: %s", identifier, e
                     )
+                    failed_integrations.add(identifier)
+                    continue
 
                 _installed_integrations.add(identifier)
+
+    for identifier in failed_integrations:
+        integrations.pop(identifier, None)
 
     for identifier in integrations:
         logger.debug("Enabling integration %s", identifier)

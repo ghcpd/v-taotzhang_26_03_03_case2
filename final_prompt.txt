@@ -1,0 +1,13 @@
+There's an issue with how integrations report their enabled status in the SDK.
+
+When an auto-enabling integration fails to set up (like when a required dependency isn't installed or is incompatible), it still shows up as "enabled" in the integrations list. This is confusing because the integration never actually got enabled - it should be excluded from the enabled integrations entirely.
+
+Your goal is to fix this so that integrations which fail during setup are correctly excluded from the enabled list.
+
+A test script is ready to show the problem. Run it with:
+
+```bash
+python test_integration_status.py
+```
+
+Also include a README.md describing what you changed and why, and make sure the tests pass before submitting.

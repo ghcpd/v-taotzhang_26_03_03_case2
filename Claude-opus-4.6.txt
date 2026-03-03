@@ -1,0 +1,66 @@
+User: There's an issue with how integrations report their enabled status in the SDK.
+
+When an auto-enabling integration fails to set up (like when a required dependency isn't installed or is incompatible), it still shows up as "enabled" in the integrations list. This is confusing because the integration never actually got enabled - it should be excluded from the enabled integrations entirely.
+
+Your goal is to fix this so that integrations which fail during setup are correctly excluded from the enabled list.
+
+A test script is ready to show the problem. Run it with:
+
+```bash
+python test_integration_status.py
+```
+
+Also include a README.md describing what you changed and why, and make sure the tests pass before submitting.
+
+
+GitHub Copilot: 
+
+  
+
+Created 5 todos
+
+Ran terminal command: python test_integration_status.py
+Completed with input: python test_integration_status.py
+
+Starting: *Examine integration setup code* (2/5)
+
+Searched for text `setup_integrations` (`**/basecode/sentry_sdk/integrations/__init__.py`), 1 result
+
+Read [](file:///c%3A/Users/v-taotzhang/26_03_03_case2/Bugbash_workflow/Claude-opus-4.6/basecode/sentry_sdk/integrations/__init__.py)
+
+Starting: *Fix the bug* (3/5)
+
+The bug is clear: when a `DidNotEnable` exception is caught for a default integration, the code logs the error but still adds the identifier to `_installed_integrations` and keeps the integration in the `integrations` dict that gets returned. The fix needs to:
+
+1. Skip adding the identifier to `_installed_integrations` when `DidNotEnable` is raised
+2. Remove the failed integration from the `integrations` dict so it's not returned 
+
+Replacing 32 lines with 39 lines in [](file:///c%3A/Users/v-taotzhang/26_03_03_case2/Bugbash_workflow/Claude-opus-4.6/basecode/sentry_sdk/integrations/__init__.py)
+
+
+```
+
+```
+
+
+Starting: *Verify tests pass* (4/5)
+
+Ran terminal command: python test_integration_status.py
+
+Starting: *Create README.md* (5/5)
+
+Created [](file:///c%3A/Users/v-taotzhang/26_03_03_case2/Bugbash_workflow/Claude-opus-4.6/README.md)
+
+Completed: *Create README.md* (5/5)
+
+All done. Here's a summary:
+
+**Bug:** In `setup_integrations()`, the `_installed_integrations.add(identifier)` line ran unconditionally — even after a `DidNotEnable` exception — and the failed integration remained in the returned dict.
+
+**Fix** (in __init__.py):
+- Added `continue` in the `DidNotEnable` handler so failed integrations skip `_installed_integrations.add()`
+- Track failed identifiers in a `failed_integrations` set and remove them from the returned dict
+
+Both tests now pass.
+
+Made changes.
