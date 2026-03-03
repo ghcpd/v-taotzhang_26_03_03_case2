@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 _installer_lock = Lock()
 _installed_integrations = set()  # type: Set[str]
+_failed_integrations = set()  # type: Set[str]
 
 
 def _generate_default_integrations_iterator(
@@ -119,7 +120,15 @@ def setup_integrations(
                 integrations[instance.identifier] = instance
                 used_as_default_integration.add(instance.identifier)
 
+    # Track which integrations failed to enable so we can remove them
+    failed_integrations = []
+
     for identifier, integration in iteritems(integrations):
+        # Skip integrations that previously failed to enable
+        if identifier in _failed_integrations:
+            failed_integrations.append(identifier)
+            continue
+
         with _installer_lock:
             if identifier not in _installed_integrations:
                 logger.debug(
@@ -144,8 +153,15 @@ def setup_integrations(
                     logger.debug(
                         "Did not enable default integration %s: %s", identifier, e
                     )
+                    # Mark this integration as failed so it can be removed
+                    _failed_integrations.add(identifier)
+                    failed_integrations.append(identifier)
 
                 _installed_integrations.add(identifier)
+
+    # Remove integrations that failed to enable from the results
+    for identifier in failed_integrations:
+        del integrations[identifier]
 
     for identifier in integrations:
         logger.debug("Enabling integration %s", identifier)
